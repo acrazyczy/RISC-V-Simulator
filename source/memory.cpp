@@ -22,39 +22,15 @@ namespace riscv_sim
 		}
 	}
 
-	void memory::getcode(const uint &address , uint &code)
-	{
-		code = *reinterpret_cast<uint *>(pool + address);
-		std::cerr << "load " << code << " from " << std::hex << address << std::dec << std::endl;
-	}
+	void memory::getcode(const uint &address , uint &code) {code = *reinterpret_cast<uint *>(pool + address);}
 
-	void memory::load_8bits(const uint &address , uint &code)
-	{
-		code = pool[address];
-		std::cerr << "load " << code << " from " << std::hex << address << std::dec << std::endl;
-	}
+	void memory::load_8bits(const uint &address , uint &code) {code = pool[address];}
 
-	void memory::load_16bits(const uint &address , uint &code)
-	{
-		code = *reinterpret_cast<unsigned short *>(pool + address);
-		std::cerr << "load " << code << " from " << std::hex << address << std::dec << std::endl;
-	}
+	void memory::load_16bits(const uint &address , uint &code) {code = *reinterpret_cast<unsigned short *>(pool + address);}
 
-	void memory::store_8bits(const uint &address , const uint &code)
-	{
-		std::cerr << "store " << code << " to " << std::hex << address << std::dec << std::endl;
-		pool[address] = code;
-	}
+	void memory::store_8bits(const uint &address , const uint &code) {pool[address] = code;}
 
-	void memory::store_16bits(const uint &address , const uint &code)
-	{
-		std::cerr << "store " << code << " to " << std::hex << address << std::dec << std::endl;
-		*reinterpret_cast<unsigned short *>(pool + address) = static_cast<unsigned short>(code);
-	}
+	void memory::store_16bits(const uint &address , const uint &code) {*reinterpret_cast<unsigned short *>(pool + address) = static_cast<unsigned short>(code);}
 
-	void memory::store_32bits(const uint &address , const uint &code)
-	{
-		std::cerr << "store " << code << " to " << std::hex << address << std::dec << std::endl;
-		*reinterpret_cast<uint *>(pool + address) = code;
-	}
+	void memory::store_32bits(const uint &address , const uint &code) {*reinterpret_cast<uint *>(pool + address) = code;}
 }

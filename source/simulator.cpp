@@ -29,8 +29,6 @@ namespace riscv_sim
 			IF() , ID(cur);
 			if (cur -> is_exit()) break;
 			for (int i = 0;i < 3;++ i) cur -> execute();
-			for (int i = 0;i < 32;++ i) std::cerr << reg -> access(i) << " ";
-			std::cerr << std::endl;
 		}
 	}
 
