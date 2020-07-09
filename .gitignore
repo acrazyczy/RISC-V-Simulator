@@ -1,0 +1,5 @@
+reference/
+cmake-build-debug/
+.idea/
+riscv-testcases/
+temp/
