@@ -29,6 +29,7 @@ namespace riscv_sim
 			IF() , ID(cur);
 			if (cur -> is_exit()) break;
 			for (int i = 0;i < 3;++ i) cur -> execute();
+			delete cur;
 		}
 	}
 
