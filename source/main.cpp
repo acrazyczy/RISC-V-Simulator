@@ -10,8 +10,8 @@ riscv_sim::simulator *sim;
 
 int main()
 {
-	std::ifstream in("/mnt/d/Academy/course/PPCA/2020/RISCV/riscv-testcases/testcases/array_test1.data");
-	std::cin.rdbuf(in.rdbuf());
+//	std::ifstream in("/mnt/d/Academy/course/PPCA/2020/RISCV/riscv-testcases/testcases/array_test1.data");
+//	std::cin.rdbuf(in.rdbuf());
 	sim = new riscv_sim::simulator;
 	sim -> run() , sim -> answer();
 	delete sim;
