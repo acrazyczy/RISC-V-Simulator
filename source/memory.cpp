@@ -7,7 +7,7 @@
 
 namespace riscv_sim
 {
-	memory::memory()
+	memory::memory() : lock(nullptr)
 	{
 		for (uint offset;!std::cin.eof();)
 		{
@@ -22,6 +22,18 @@ namespace riscv_sim
 		}
 	}
 
+	bool memory::access(ISA_base *isa)
+	{
+		if (lock == nullptr) lock = isa , lockcnt = 3;
+		if (lock != isa) return false;
+		if (!(-- lockcnt))
+		{
+			lock = nullptr;
+			return true;
+		}
+		return false;
+	}
+
 	void memory::getcode(const uint &address , uint &code) {code = *reinterpret_cast<uint *>(pool + address);}
 
 	void memory::load_8bits(const uint &address , uint &code) {code = pool[address];}
@@ -30,7 +42,7 @@ namespace riscv_sim
 
 	void memory::store_8bits(const uint &address , const uint &code) {pool[address] = code;}
 
-	void memory::store_16bits(const uint &address , const uint &code) {*reinterpret_cast<unsigned short *>(pool + address) = static_cast<unsigned short>(code);}
+	void memory::store_16bits(const uint &address , const uint &code) {*reinterpret_cast<unsigned short *>(pool + address) = code;}
 
 	void memory::store_32bits(const uint &address , const uint &code) {*reinterpret_cast<uint *>(pool + address) = code;}
 }

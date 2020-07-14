@@ -9,13 +9,14 @@
 #include "ISA_base.hpp"
 
 namespace riscv_sim
-	{
+{
 	class R_type : public ISA_base
 	{
-	private:
-		uint rs1 , rs2 , rd;
 	public:
-		R_type(uint code , memory *mem_ , register_manager *reg_ , ALU *alu_) : rs1(bitsrange(code , 15 , 19)) , rs2(bitsrange(code , 20 , 24)) , rd(bitsrange(code , 7 , 11)) , ISA_base(code , mem_ , reg_ , alu_)
+		uint rs1 , rs2 , rd;
+		R_type(uint code , memory *mem_ , register_manager *reg_ , ALU *alu_ , IF_ID_reg &IF_ID_ , ID_EX_reg &ID_EX_ , EX_MEM_reg &EX_MEM_ , MEM_WB_reg &MEM_WB_) :
+		rs1(bitsrange(code , 15 , 19)) , rs2(bitsrange(code , 20 , 24)) , rd(bitsrange(code , 7 , 11)) ,
+		ISA_base(code , mem_ , reg_ , alu_ , IF_ID_ , ID_EX_ , EX_MEM_ , MEM_WB_)
 		{
 			switch (bitsrange(code , 12 , 14))
 			{
@@ -28,7 +29,7 @@ namespace riscv_sim
 				case 6 : opt = OR;break;
 				case 7 : opt = AND;break;
 			}
-			reg -> A = reg -> access(rs1) , reg -> B = reg -> access(rs2);
+			ID_EX.A = reg -> access(rs1) , ID_EX.B = reg -> access(rs2);
 		}
 
 		void execute() override;
@@ -36,13 +37,13 @@ namespace riscv_sim
 
 	class I_type : public ISA_base
 	{
-	private:
-		uint rs1 , rd , imm;
 	public:
-		I_type(uint code , memory *mem_ , register_manager *reg_ , ALU *alu_) :
+		uint rs1 , rd , imm;
+
+		I_type(uint code , memory *mem_ , register_manager *reg_ , ALU *alu_ , IF_ID_reg &IF_ID_ , ID_EX_reg &ID_EX_ , EX_MEM_reg &EX_MEM_ , MEM_WB_reg &MEM_WB_) :
 			rs1(bitsrange(code , 15 , 19)) , rd(bitsrange(code , 7 , 11)) ,
 			imm(sign_extend(bitsrange(code , 20 , 31) , 20)) ,
-			ISA_base(code , mem_ , reg_ , alu_)
+			ISA_base(code , mem_ , reg_ , alu_ , IF_ID_ , ID_EX_ , EX_MEM_ , MEM_WB_)
 		{
 			switch (code & 127u)
 			{
@@ -71,7 +72,7 @@ namespace riscv_sim
 					break;
 				case 103 : opt = JALR;break;
 			}
-			reg -> A = reg -> access(rs1) , reg -> Imm = imm;
+			ID_EX.A = reg -> access(rs1) , ID_EX.Imm = imm;
 		}
 
 		void execute() override;
@@ -79,13 +80,13 @@ namespace riscv_sim
 
 	class S_type : public ISA_base
 	{
-	private:
-		uint rs1 , rs2 , imm;
 	public:
-		S_type(uint code , memory *mem_ , register_manager *reg_ , ALU *alu_) :
+		uint rs1 , rs2 , imm;
+
+		S_type(uint code , memory *mem_ , register_manager *reg_ , ALU *alu_ , IF_ID_reg &IF_ID_ , ID_EX_reg &ID_EX_ , EX_MEM_reg &EX_MEM_ , MEM_WB_reg &MEM_WB_) :
 			rs1(bitsrange(code , 15 , 19)) , rs2(bitsrange(code , 20 , 24)) ,
 			imm(sign_extend(bitsrange(code , 7 , 11) | bitsrange(code , 25 , 31) << 5 , 20)) ,
-			ISA_base(code , mem_ , reg_ , alu_)
+			ISA_base(code , mem_ , reg_ , alu_ , IF_ID_ , ID_EX_ , EX_MEM_ , MEM_WB_)
 		{
 			switch (bitsrange(code , 12 , 14))
 			{
@@ -93,7 +94,7 @@ namespace riscv_sim
 				case 1 : opt = SH;break;
 				case 2 : opt = SW;break;
 			}
-			reg -> A = reg -> access(rs1) , reg -> B = reg -> access(rs2) , reg -> Imm = imm;
+			ID_EX.A = reg -> access(rs1) , ID_EX.B = reg -> access(rs2) , ID_EX.Imm = imm;
 		}
 
 		void execute() override;
@@ -101,13 +102,13 @@ namespace riscv_sim
 
 	class B_type : public ISA_base
 	{
-	private:
-		uint rs1 , rs2 , imm;
 	public:
-		B_type(uint code , memory *mem_ , register_manager *reg_ , ALU *alu_) :
+		uint rs1 , rs2 , imm;
+
+		B_type(uint code , memory *mem_ , register_manager *reg_ , ALU *alu_ , IF_ID_reg &IF_ID_ , ID_EX_reg &ID_EX_ , EX_MEM_reg &EX_MEM_ , MEM_WB_reg &MEM_WB_) :
 			rs1(bitsrange(code , 15 , 19)) , rs2(bitsrange(code , 20 , 24)) ,
 			imm(sign_extend((code >> 7 & 1) << 11 | bitsrange(code , 8 , 11) << 1 | bitsrange(code , 25 , 30) << 5 | (code >> 31 & 1) << 12 , 19)) ,
-			ISA_base(code , mem_ , reg_ , alu_)
+			ISA_base(code , mem_ , reg_ , alu_ , IF_ID_ , ID_EX_ , EX_MEM_ , MEM_WB_)
 		{
 			switch (bitsrange(code , 12 , 14))
 			{
@@ -118,7 +119,7 @@ namespace riscv_sim
 				case 6 : opt = BLTU;break;
 				case 7 : opt = BGEU;break;
 			}
-			reg -> A = reg -> access(rs1) , reg -> B = reg -> access(rs2) , reg -> Imm = imm;
+			ID_EX.A = reg -> access(rs1) , ID_EX.B = reg -> access(rs2) , ID_EX.Imm = imm;
 		}
 
 		void execute() override;
@@ -126,16 +127,16 @@ namespace riscv_sim
 
 	class U_type : public ISA_base
 	{
-	private:
-		uint rd , imm;
 	public:
-		U_type(uint code , memory *mem_ , register_manager *reg_ , ALU *alu_) :
+		uint rd , imm;
+
+		U_type(uint code , memory *mem_ , register_manager *reg_ , ALU *alu_ , IF_ID_reg &IF_ID_ , ID_EX_reg &ID_EX_ , EX_MEM_reg &EX_MEM_ , MEM_WB_reg &MEM_WB_) :
 			rd(bitsrange(code , 7 , 11)) ,
 			imm(bitsrange(code , 12 , 31) << 12) ,
-			ISA_base(code , mem_ , reg_ , alu_)
+			ISA_base(code , mem_ , reg_ , alu_ , IF_ID_ , ID_EX_ , EX_MEM_ , MEM_WB_)
 		{
-			 opt = (code & 127u) == 55 ? LUI : AUIPC;
-			 reg -> Imm = imm;
+			opt = (code & 127u) == 55 ? LUI : AUIPC;
+			ID_EX.Imm = imm;
 		}
 
 		void execute() override;
@@ -143,19 +144,27 @@ namespace riscv_sim
 
 	class J_type : public ISA_base
 	{
-	private:
-		uint rd , imm;
 	public:
-		J_type(uint code , memory *mem_ , register_manager *reg_ , ALU *alu_) :
+		uint rd , imm;
+
+		J_type(uint code , memory *mem_ , register_manager *reg_ , ALU *alu_ , IF_ID_reg &IF_ID_ , ID_EX_reg &ID_EX_ , EX_MEM_reg &EX_MEM_ , MEM_WB_reg &MEM_WB_) :
 			rd(bitsrange(code , 7 , 11)) ,
 			imm(sign_extend(bitsrange(code , 12 , 19) << 12 | (code >> 20 & 1) << 11 | bitsrange(code , 21 , 30) << 1 | (code >> 31 & 1) << 20 , 11)) ,
-			ISA_base(code , mem_ , reg_ , alu_)
+			ISA_base(code , mem_ , reg_ , alu_ , IF_ID_ , ID_EX_ , EX_MEM_ , MEM_WB_)
 		{
 			opt = JAL;
-			reg -> Imm = imm;
+			ID_EX.Imm = imm;
 		}
 
 		void execute() override;
+	};
+
+	class NO_type : public ISA_base
+	{
+	public:
+		NO_type(IF_ID_reg &IF_ID_ , ID_EX_reg &ID_EX_ , EX_MEM_reg &EX_MEM_ , MEM_WB_reg &MEM_WB_) : ISA_base(0 , nullptr , nullptr , nullptr , IF_ID_ , ID_EX_ , EX_MEM_ , MEM_WB_) {}
+
+		void execute() override {}
 	};
 }
 

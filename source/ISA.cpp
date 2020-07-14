@@ -11,35 +11,38 @@ namespace riscv_sim
 	{
 		++ stage;
 		if (stage == 2)
+		{
 			switch (opt)
 			{
 				case ADD : case SUB :
-					opt == ADD ? alu -> add(reg -> A , reg -> B) : alu -> sub(reg -> A , reg -> B);
+					opt == ADD ? alu -> add(ID_EX.A , ID_EX.B) : alu -> sub(ID_EX.A , ID_EX.B);
 					break;
 				case SLT : case SLTU :
-					opt == SLT ? alu -> lt(reg -> A , reg -> B) : alu -> ltu(reg -> A , reg -> B);
+					opt == SLT ? alu -> lt(ID_EX.A , ID_EX.B) : alu -> ltu(ID_EX.A , ID_EX.B);
 					break;
 				case AND :
-					alu -> __and(reg -> A , reg -> B);
+					alu -> __and(ID_EX.A , ID_EX.B);
 					break;
 				case OR :
-					alu -> __or(reg -> A , reg -> B);
+					alu -> __or(ID_EX.A , ID_EX.B);
 					break;
 				case XOR :
-					alu -> __xor(reg -> A , reg -> B);
+					alu -> __xor(ID_EX.A , ID_EX.B);
 					break;
 				case SLL :
-					alu -> sll(reg -> A , reg -> B & 31u);
+					alu -> sll(ID_EX.A , ID_EX.B & 31u);
 					break;
 				case SRL :
-					alu -> srl(reg -> A , reg -> B & 31u);
+					alu -> srl(ID_EX.A , ID_EX.B & 31u);
 					break;
 				case SRA :
-					alu -> sra(reg -> A , reg -> B & 31u);
+					alu -> sra(ID_EX.A , ID_EX.B & 31u);
 					break;
 			}
-		else if (stage == 3) reg -> pc = reg -> npc;
-		else if (stage == 4) reg -> access(rd) = reg -> ALU;
+			EX_MEM.Cond = 0 , EX_MEM.npc = ID_EX.npc;
+		}
+		else if (stage == 3) MEM_WB.ALU = EX_MEM.ALU , MEM_WB.npc = EX_MEM.npc;
+		else if (stage == 4) reg -> access(rd) = MEM_WB.ALU;
 	}
 
 	void I_type::execute()
@@ -47,51 +50,35 @@ namespace riscv_sim
 		++ stage;
 		switch (opt)
 		{
-			case ADDI :
-				if (stage == 2) alu -> add(reg -> A , reg -> Imm);
-				else if (stage == 3) reg -> pc = reg -> npc;
-				else if (stage == 4) reg -> access(rd) = reg -> ALU;
-				break;
-			case SLTI : case SLTIU :
-				if (stage == 2) opt == SLTI ? alu -> lt(reg -> A , reg -> Imm) : alu -> ltu(reg -> A , reg -> Imm);
-				else if (stage == 3) reg -> pc = reg -> npc;
-				else if (stage == 4) reg -> access(rd) = reg -> ALU;
-				break;
-			case ANDI : case ORI : case XORI :
-				if (stage == 2) opt == ANDI ? alu -> __and(reg -> A , reg -> Imm) : (opt == ORI ? alu -> __or(reg -> A , reg -> Imm) : alu -> __xor(reg -> A , reg -> Imm));
-				else if (stage == 3) reg -> pc = reg -> npc;
-				else if (stage == 4) reg -> access(rd) = reg -> ALU;
-				break;
-			case SLLI : case SRLI : case SRAI :
-				if (stage == 2) opt == SLLI ? alu -> sll(reg -> A , reg -> Imm & 31u) : (opt == SRLI ? alu -> srl(reg -> A , reg -> Imm & 31u) : alu -> sra(reg -> A , reg -> Imm & 31u));
-				else if (stage == 3) reg -> pc = reg -> npc;
-				else if (stage == 4) reg -> access(rd) = reg -> ALU;
-				break;
-			case JALR :
-				if (stage == 2) alu -> add(reg -> A , reg -> Imm) , reg -> ALU ^= reg -> ALU & 1;
-				else if (stage == 3) reg -> pc = reg -> ALU;
-				else if (stage == 4) reg -> access(rd) = reg -> npc;
-				break;
+			case ADDI : if (stage == 2) alu -> add(ID_EX.A , ID_EX.Imm);break;
+			case SLTI : case SLTIU : if (stage == 2) opt == SLTI ? alu -> lt(ID_EX.A , ID_EX.Imm) : alu -> ltu(ID_EX.A , ID_EX.Imm);break;
+			case ANDI : case ORI : case XORI : if (stage == 2) opt == ANDI ? alu -> __and(ID_EX.A , ID_EX.Imm) : (opt == ORI ? alu -> __or(ID_EX.A , ID_EX.Imm) : alu -> __xor(ID_EX.A , ID_EX.Imm));break;
+			case SLLI : case SRLI : case SRAI : if (stage == 2) opt == SLLI ? alu -> sll(ID_EX.A , ID_EX.Imm & 31u) : (opt == SRLI ? alu -> srl(ID_EX.A , ID_EX.Imm & 31u) : alu -> sra(ID_EX.A , ID_EX.Imm & 31u));break;
+			case JALR : if (stage == 2) alu -> add(ID_EX.A , ID_EX.Imm) , EX_MEM.ALU ^= EX_MEM.ALU & 1;break;
 			default :
-				if (stage == 2) alu -> add(reg -> A , reg -> Imm);
+				if (stage == 2) alu -> add(ID_EX.A , ID_EX.Imm);
 				else if (stage == 3)
 				{
-					switch (opt)
-					{
-						case LB : case LBU :
-							mem -> load_8bits(reg -> ALU , reg -> LMD);
-							if (opt == LBU) reg -> LMD = sign_extend(reg -> LMD , 24);
-							break;
-						case LH : case LHU :
-							mem -> load_16bits(reg -> ALU , reg -> LMD);
-							if (opt == LHU) reg -> LMD = sign_extend(reg -> LMD , 16);
-							break;
-						case LW : mem -> getcode(reg -> ALU , reg -> LMD);break;
-					}
-					reg -> pc = reg -> npc;
+					if (mem -> access(reinterpret_cast<ISA_base *>(this)))
+						switch (opt)
+						{
+							case LB : case LBU :
+								mem -> load_8bits(EX_MEM.ALU , MEM_WB.LMD);
+								if (opt == LBU) MEM_WB.LMD = sign_extend(MEM_WB.LMD , 24);
+								break;
+							case LH : case LHU :
+								mem -> load_16bits(EX_MEM.ALU , MEM_WB.LMD);
+								if (opt == LHU) MEM_WB.LMD = sign_extend(MEM_WB.LMD , 16);
+								break;
+							case LW : mem -> getcode(EX_MEM.ALU , MEM_WB.LMD);break;
+						}
+					else -- stage;
 				}
-				else if (stage == 4) reg -> access(rd) = reg -> LMD;
+				else if (stage == 4) reg -> access(rd) = MEM_WB.LMD;
 		}
+		if (stage == 2) EX_MEM.Cond = 0 , EX_MEM.npc = ID_EX.npc;
+		else if (stage == 3) MEM_WB.ALU = EX_MEM.ALU , MEM_WB.npc = EX_MEM.npc;
+		else if (stage == 4 && opt != LB && opt != LBU && opt != LH && opt != LHU && opt != LW) reg -> access(rd) = opt == JALR ? MEM_WB.npc : MEM_WB.ALU;
 	}
 
 	void B_type::execute()
@@ -101,49 +88,50 @@ namespace riscv_sim
 		{
 			switch (opt)
 			{
-				case BEQ : reg -> Cond = reg -> A == reg -> B;break;
-				case BNE : reg -> Cond = reg -> A != reg -> B;break;
-				case BLT : reg -> Cond = static_cast<int>(reg -> A) < static_cast<int>(reg -> B);break;
-				case BLTU : reg -> Cond = reg -> A < reg -> B;break;
-				case BGE : reg -> Cond = static_cast<int>(reg -> A) >= static_cast<int>(reg -> B);break;
-				case BGEU : reg -> Cond = reg -> A >= reg -> B;break;
+				case BEQ : EX_MEM.Cond = ID_EX.A == ID_EX.B;break;
+				case BNE : EX_MEM.Cond = ID_EX.A != ID_EX.B;break;
+				case BLT : EX_MEM.Cond = static_cast<int>(ID_EX.A) < static_cast<int>(ID_EX.B);break;
+				case BLTU : EX_MEM.Cond = ID_EX.A < ID_EX.B;break;
+				case BGE : EX_MEM.Cond = static_cast<int>(ID_EX.A) >= static_cast<int>(ID_EX.B);break;
+				case BGEU : EX_MEM.Cond = ID_EX.A >= ID_EX.B;break;
 			}
-			alu -> add(reg -> pc , reg -> Imm);
+			EX_MEM.Cond ^= ID_EX.Cond , EX_MEM.npc = ID_EX.npc , alu -> add(ID_EX.pc , ID_EX.Imm);
 		}
-		else if (stage == 3)
-			if (reg -> Cond) reg -> pc = reg -> ALU;
-			else reg -> pc = reg -> npc;
+		else if (stage == 3) MEM_WB.ALU = EX_MEM.ALU , MEM_WB.npc = EX_MEM.npc;
 	}
 
 	void U_type::execute()
 	{
 		++ stage;
-		if (stage == 2) alu -> add(opt == LUI ? 0 : reg -> pc , reg -> Imm);
-		else if (stage == 3) reg -> pc = reg -> npc;
-		else if (stage == 4) reg -> access(rd) = reg -> ALU;
+		if (stage == 2) EX_MEM.Cond = 0 , EX_MEM.npc = ID_EX.npc , alu -> add(opt == LUI ? 0 : ID_EX.pc , ID_EX.Imm);
+		else if (stage == 3) MEM_WB.ALU = EX_MEM.ALU , MEM_WB.npc = EX_MEM.npc;
+		else if (stage == 4) reg -> access(rd) = MEM_WB.ALU;
 	}
 
 	void S_type::execute()
 	{
 		++ stage;
-		if (stage == 2) alu -> add(reg -> A , reg -> Imm);
+		if (stage == 2) alu -> add(ID_EX.A , ID_EX.Imm) , EX_MEM.Cond = 0 , EX_MEM.npc = ID_EX.npc , EX_MEM.B = ID_EX.B;
 		else if (stage == 3)
 		{
-			switch (opt)
+			if (mem -> access(reinterpret_cast<ISA_base *>(this)))
 			{
-				case SB : mem -> store_8bits(reg -> ALU , reg -> B & 255u);break;
-				case SH : mem -> store_16bits(reg -> ALU , reg -> B & 65535u);break;
-				case SW : mem -> store_32bits(reg -> ALU , reg -> B);break;
-			}
-			reg -> pc = reg -> npc;
+				switch (opt)
+				{
+					case SB : mem -> store_8bits(EX_MEM.ALU , EX_MEM.B & 255u);break;
+					case SH : mem -> store_16bits(EX_MEM.ALU , EX_MEM.B & 65535u);break;
+					case SW : mem -> store_32bits(EX_MEM.ALU , EX_MEM.B);break;
+				}
+				MEM_WB.ALU = EX_MEM.ALU , MEM_WB.npc = EX_MEM.npc;
+			}else -- stage;
 		}
 	}
 
 	void J_type::execute()
 	{
 		++ stage;
-		if (stage == 2) alu -> add(reg -> pc , reg -> Imm);
-		else if (stage == 3) reg -> pc = reg -> ALU;
-		else if (stage == 4) reg -> access(rd) = reg -> npc;
+		if (stage == 2) alu -> add(ID_EX.pc , ID_EX.Imm) , EX_MEM.Cond = 0 , EX_MEM.npc = ID_EX.npc;
+		else if (stage == 3) MEM_WB.ALU = EX_MEM.ALU , MEM_WB.npc = EX_MEM.npc;
+		else if (stage == 4) reg -> access(rd) = MEM_WB.npc;
 	}
 }

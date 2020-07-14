@@ -7,15 +7,23 @@
 #define CODE_MEMORY_HPP
 
 #include "inc.hpp"
+#include "ISA_base.hpp"
 
 namespace riscv_sim
 {
+	class ISA_base;
+
 	class memory
 	{
 	private:
-		unsigned char pool[0x20000];
+		unsigned char pool[0x20001];
 	public:
+		ISA_base *lock;
+		int lockcnt;
+
 		memory();
+
+		bool access(ISA_base *);
 
 		void getcode(const uint & , uint &);
 		void load_8bits(const uint & , uint &);

@@ -7,6 +7,7 @@
 #define CODE_ALU_HPP
 
 #include "register_manager.hpp"
+#include "pipeline.hpp"
 
 namespace riscv_sim
 {
@@ -14,8 +15,9 @@ namespace riscv_sim
 	{
 	private:
 		register_manager *reg;
+		EX_MEM_reg &EX_MEM;
 	public:
-		ALU(register_manager *reg_) : reg(reg_) {}
+		ALU(register_manager *reg_ , EX_MEM_reg &EX_MEM_) : reg(reg_) , EX_MEM(EX_MEM_) {}
 
 		void add(uint , uint);
 		void sub(uint , uint);

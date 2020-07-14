@@ -7,5 +7,9 @@
 
 namespace riscv_sim
 {
-	uint register_manager::getpc() {return npc = pc + 4 , pc;}
+	uint register_manager::getpc()
+	{
+		IF_ID.pc = IF_ID.npc , IF_ID.npc += 4;
+		return IF_ID.pc;
+	}
 }
