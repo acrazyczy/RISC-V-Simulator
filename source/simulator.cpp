@@ -29,10 +29,6 @@ namespace riscv_sim
 		while (true)
 		{
 			if (pipeline[0] != nullptr && pipeline[0] -> is_exit()) break;
-			if (pipeline[1] == reinterpret_cast<ISA_base *>(0x841c3e0) && pipeline[2] == reinterpret_cast<ISA_base *>(0x841c450))
-			{
-				int g = 1;
-			}
 			for (int i = 0;i < 5;++ i)
 				if (pipeline[i] == nullptr)
 				{
@@ -43,6 +39,11 @@ namespace riscv_sim
 				else if (pipeline[i] == if_ptr)
 				{
 					ID(pipeline[i] = nullptr);
+					if (!forwarding(pipeline , i))
+					{
+						delete pipeline[i] , pipeline[i] = if_ptr;
+						break;
+					}
 					ID_EX.Cond = IF_ID.Cond , ID_EX.pc = IF_ID.pc , ID_EX.npc = IF_ID.npc;
 				}
 				else if (pipeline[i] -> is_exit()) break;
@@ -70,8 +71,7 @@ namespace riscv_sim
 						}
 						IF_ID.npc = EX_MEM.ALU;
 					}
-					if (pipeline[i] -> stage != 1 || forwarding(pipeline , i)) pipeline[i] -> execute();
-					else break;
+					pipeline[i] -> execute();
 					if (mem -> lock == pipeline[i]) break;
 				}
 			if (pipeline[0] != nullptr && pipeline[0] -> is_finished())

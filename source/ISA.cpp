@@ -59,7 +59,7 @@ namespace riscv_sim
 				if (stage == 2) alu -> add(ID_EX.A , ID_EX.Imm);
 				else if (stage == 3)
 				{
-					if (mem -> access(reinterpret_cast<ISA_base *>(this)))
+					if (mem -> access(this))
 						switch (opt)
 						{
 							case LB : case LBU :
@@ -114,7 +114,7 @@ namespace riscv_sim
 		if (stage == 2) alu -> add(ID_EX.A , ID_EX.Imm) , EX_MEM.Cond = 0 , EX_MEM.npc = ID_EX.npc , EX_MEM.B = ID_EX.B;
 		else if (stage == 3)
 		{
-			if (mem -> access(reinterpret_cast<ISA_base *>(this)))
+			if (mem -> access(this))
 			{
 				switch (opt)
 				{
