@@ -8,21 +8,33 @@
 
 namespace riscv_sim
 {
-	static int bin[256];
+	static const uint mask = (1u << 7) - 1;
+	static unsigned char bin[mask + 1];
+	static int total = 0 , succ = 0;
 
 	struct predictor
 	{
-		bool operator()(uint w) const {return bin[w & 255u] >= 2u;}//return predict value
+		predictor() {memset(bin , 2 , mask + 1);}
+
+		bool operator()(uint w) const {return bin[(w >> 2) & mask] > 1u;}
 
 		static void success(uint w)
 		{
-			bin[w & 255u] ^= ((bin[w & 255u] & 1u ^ 1u) ^ (bin[w & 255u] & 2u ^ 2u) << (bin[w & 255u] & 1u ^ 1u)) & 3u;
+			w >>= 2;
+			static unsigned char nxt[] = {0 , 0 , 3 , 3};
+			bin[w & mask] = nxt[bin[w & mask]];
+			++ total , ++ succ;
 		}
 
 		static void fail(uint w)
 		{
-			bin[w & 255u] ^= ((bin[w & 255u] & 1u) ^ (bin[w & 255u] & 2u) << (bin[w & 255u] & 1u)) & 3u;
+			w >>= 2;
+			static unsigned char nxt[] = {1 , 2 , 1 , 2};
+			bin[w & mask] = nxt[bin[w & mask]];
+			++ total;
 		}
+
+		~predictor() {std::cerr << "total predictions: " << total << std::endl << "successful attempts: " << succ << std::endl << "hit rate: " << (static_cast<long double>(succ) / total) << std::endl;}
 	};
 }
 

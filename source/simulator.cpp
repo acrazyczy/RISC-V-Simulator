@@ -33,12 +33,14 @@ namespace riscv_sim
 				if (pipeline[i] == nullptr)
 				{
 					IF() , pipeline[i] = if_ptr;
-					if (getformatType(IF_ID.IR) == B_TYPE && (IF_ID.Cond = pd(IF_ID.pc))) IF_ID.npc = sign_extend((IF_ID.IR >> 7 & 1) << 11 | bitsrange(IF_ID.IR , 8 , 11) << 1 | bitsrange(IF_ID.IR , 25 , 30) << 5 | (IF_ID.IR >> 31 & 1) << 12 , 19);
+					if (getformatType(IF_ID.IR & 127u) == B_TYPE && (IF_ID.Cond = pd(IF_ID.pc)))
+						IF_ID.npc = IF_ID.pc + sign_extend((IF_ID.IR >> 7 & 1) << 11 | bitsrange(IF_ID.IR , 8 , 11) << 1 | bitsrange(IF_ID.IR , 25 , 30) << 5 | (IF_ID.IR >> 31 & 1) << 12 , 19);
 					break;
 				}
 				else if (pipeline[i] == if_ptr)
 				{
 					ID(pipeline[i] = nullptr);
+					if (pipeline[i] == nullptr) break;
 					if (!forwarding(pipeline , i))
 					{
 						delete pipeline[i] , pipeline[i] = if_ptr;
@@ -50,18 +52,16 @@ namespace riscv_sim
 				else
 				{
 					if (pipeline[i] -> fmt == B_TYPE && pipeline[i] -> stage == 2)
-					{
-						if (EX_MEM.Cond == true)
+						if (EX_MEM.Cond)
 						{
 							for (int j = i + 1;j < 5 && pipeline[j];++ j)
 							{
 								if (pipeline[j] != if_ptr) delete pipeline[j];
 								pipeline[j] = nullptr;
 							}
-							IF_ID.npc = EX_MEM.ALU;
-							predictor::fail(pipeline[i] -> code_);
-						}else predictor::success(pipeline[i] -> code_);
-					}
+							IF_ID.npc = EX_MEM.Cond_ ? EX_MEM.ALU : EX_MEM.pc + 4;
+							predictor::fail(EX_MEM.pc);
+						}else predictor::success(EX_MEM.pc);
 					if ((pipeline[i] -> opt == JAL || pipeline[i] -> opt == JALR) && pipeline[i] -> stage == 2)
 					{
 						for (int j = i + 1;j < 5 && pipeline[j];++ j)

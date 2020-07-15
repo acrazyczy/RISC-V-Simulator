@@ -20,7 +20,7 @@ namespace riscv_sim
 
 	struct EX_MEM_reg
 	{
-		uint ALU , Cond , npc , B;
+		uint ALU , Cond , Cond_ , npc , B , pc;
 	};
 
 	struct MEM_WB_reg

@@ -95,7 +95,7 @@ namespace riscv_sim
 				case BGE : EX_MEM.Cond = static_cast<int>(ID_EX.A) >= static_cast<int>(ID_EX.B);break;
 				case BGEU : EX_MEM.Cond = ID_EX.A >= ID_EX.B;break;
 			}
-			EX_MEM.Cond ^= ID_EX.Cond , EX_MEM.npc = ID_EX.npc , alu -> add(ID_EX.pc , ID_EX.Imm);
+			EX_MEM.Cond_ = EX_MEM.Cond , EX_MEM.Cond ^= ID_EX.Cond , EX_MEM.npc = ID_EX.npc , EX_MEM.pc = ID_EX.pc , alu -> add(ID_EX.pc , ID_EX.Imm);
 		}
 		else if (stage == 3) MEM_WB.ALU = EX_MEM.ALU , MEM_WB.npc = EX_MEM.npc;
 	}
